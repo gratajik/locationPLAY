@@ -1,0 +1,153 @@
+<%@ Language=VBScript %>
+<%
+'
+' This ASP program shows how to use the AnnotatedEarth .NET Service to request information
+' about locations near a entered latitude/longitude.  Using the Location.asmx service at
+' http://www.annotatedearth.com/service/Location.asmx, a client can pass in (using a standard
+' URL) a request for information.  The service will respond back; in this example, with a list
+' of locations 
+'
+' Please visit http://www.annotatedearth.com and look in the developers section for more information
+'
+' --------------------------------------------------------------------------------------------------
+' Copyright 2003, AnnotatedEarth
+'
+' --------------------------------------------------------------------------------------------------
+' Version 1 - Initial Development (ward)
+'
+' --------------------------------------------------------------------------------------------------
+%>
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>NearMe - AnnotatedEarth ASP/VBScript Example</title>
+</head>
+
+<body>
+
+<%
+sLongitude = Request.Form("efLongitude")
+sLatitude = Request.Form("efLatitude")
+sDistance = Request.Form("efDistance")
+
+'
+' Set up defaults
+'
+if Len(sLongitude) = 0 then sLongitude = "-122.35"
+if Len(sLatitude) = 0 then sLatitude = "47.62106"
+if Len(sDistance) = 0 then sDistance = "100"
+
+%>
+  <p align=center>Example of using AnnotatedEarth to get Locations near a Location.&nbsp; See
+  <a href="http://www.annotatedearth.com">http://www.annotatedearth.com</a> for 
+  more details</p>
+  <form ACTION="nearme.asp" METHOD="post" name="NearMe" ID="Form1">
+
+  <table border="0" cellpadding="0" cellspacing="0" style="BORDER-COLLAPSE: collapse" bordercolor="#111111" width="100%" id="AutoNumber2">
+    <tr>
+      <td width="5%">Latitude:</td>
+      <td width="95%"><input name="efLatitude" value=" <% =sLatitude%>" tabindex="1" 
+      ype="text" ID="Text1"> (Example:47.62106 )
+
+      </td>
+    </tr>
+    <tr>
+      <td width="5%">Longitude:</td>
+      <td width="95%">
+      <input name="efLongitude" value=" <% =sLongitude%> " tabindex="2" ID="Text2"> (Example: -122.35 )
+      </td>
+    </tr>
+    <tr>
+      <td width="5%">Distance:</td>
+      <td width="95%">
+      <input name="efDistance" size="5" value=" <%=sDistance%>" tabindex="3" ID="Text3"></td>
+    </tr>
+    <tr>
+      <td width="5%">&nbsp;</td>
+      <td width="95%"><input type="submit" value="Submit" name="Submit" ID="Submit1"></td>
+    </tr>
+	</table>
+   </form>
+
+<%
+
+if Len(sLongitude) > 0 and Len(sLatitude) > 0 and Len(sDistance) > 0 then
+	'
+	' This call is in feet - but we really want miles here, so convert
+	'
+	sDistance = CStr(sDistance * 5280)
+
+	'
+	' XMLHTTP will be used to actually request locations (in a 
+	' XML document) from the AE .NET service
+	'	
+	set xmlHTTP = Server.CreateObject("Microsoft.XMLHTTP")
+
+	'
+	' Build our URL.  There's some more complex "Find" calls,
+	' but we're just trying to do simple here...
+	'
+	sURL = "http://www.annotatedearth.com/AELocationService/Location.asmx/FindNear?userid=15&password=guest&system=nearme_example&latitude=" + sLatitude + "&longitude=" + sLongitude  + "&feet=" + sDistance + "&groupid=1"	
+Response.Write(sURL)
+	xmlHTTP.open "GET", sURL , false
+	xmlHTTP.send
+
+	'
+	' Un-comment to see the XML
+	'	
+	'Response.Write( xmlHTTP.responseText)
+
+	'
+	' Get the XML document
+	'
+	Set xmlDom = xmlhttp.ResponseXml
+	
+	'
+	' Try to get the root node.  NOTE: Really need
+	' some error checking here, but trying to do simply, so
+	' skipping here
+	'
+	Set root = xmlDom.selectSingleNode( "ae")
+	If Not root Is Nothing Then
+	
+		'
+		' Should get a list of Locations back.  Iterate though them,
+		' building the table (ahh, ASP.NET would be so much NICER here! :)
+		'		
+		Set list = root.selectNodes("locations/location")
+		If Not list Is Nothing and list.length > 0 Then		
+			%>	 
+			<p></p>
+			<p>&nbsp;</p>
+			  <table border="1" cellpadding="0" cellspacing="0" style="BORDER-COLLAPSE: collapse" bordercolor="#111111" width="100%" id="AutoNumber1">
+			  <tr>
+			    <td width="18%" bgcolor="#008080"><font color="#ffffff">Title</font></td>
+			    <td width="8%" bgcolor="#008080"><font color="#ffffff">Distance</font></td>
+			    <td width="10%" bgcolor="#008080"><font color="#ffffff">Latitude</font></td>
+			    <td width="13%" bgcolor="#008080"><font color="#ffffff">Longitude</font></td>
+			  </tr>
+			 <%
+			 
+		    For i = 0 To list.length - 1
+		    %>
+				<tr>				
+				  <td><%=list.Item(i).selectSingleNode("title").nodeTypedValue%>&nbsp;</td>
+				  <td><%=CInt(list.Item(i).selectSingleNode("distance").nodeTypedValue/5280)%> miles (<%=list.Item(i).selectSingleNode("distance").nodeTypedValue%> feet)</td>
+				  <td><%=list.Item(i).selectSingleNode("latitude").nodeTypedValue%>&nbsp;</td>
+				  <td><%=list.Item(i).selectSingleNode("longitude").nodeTypedValue%>&nbsp;</td>
+				</tr>
+			<%	
+	        Next	        
+	        %> 
+			</table>
+			<%
+		else
+			Response.Write("No locations near that point")
+	    End If	
+	end if	        		
+end if
+%>
+</body>
+</html>

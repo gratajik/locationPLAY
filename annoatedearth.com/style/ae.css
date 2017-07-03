@@ -1,0 +1,44 @@
+a:link   
+{  
+	color: black
+} 
+
+a:visited   
+{  
+	color:Navy
+} 
+a:active   
+{  
+	color: green
+	
+} 
+body   
+{  	
+	background-color: #ffffe9;
+	font-size: 12pt;
+	font-family:Verdana;
+}
+text
+{
+	color: white;
+}
+
+.Test
+{
+	border-top-width: 0px;
+	border-left-width: 0px;
+	font-size: 8pt;
+	border-left-color: transparent;
+	border-bottom-width: 0px;
+	border-bottom-color: transparent;
+	color: yellow;
+	border-top-color: transparent;
+	font: Verdana;
+	height: 19px;
+	background-color: navy;
+	text-align: left;
+	border-right-width: 0px;
+	border-right-color: transparent;
+	
+}
+
